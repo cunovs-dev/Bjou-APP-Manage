@@ -258,7 +258,9 @@ export const userAuthorityTag = "cnvAuthority";
 // export const baseUrl = 'http://127.0.0.1:9200';
 //export const oauthLoginUrl = '';
 
-export const baseUrl = 'http://192.168.0.204:9200';
+// export const baseUrl = 'http://192.168.0.204:9200'; //改为代理不需要了
+
+export const foreUrl = 'http://192.168.0.204:8080';
 export const oauthLoginUrl = '';
 
 //验证环境 -- 需修改

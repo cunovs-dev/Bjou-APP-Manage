@@ -26,8 +26,8 @@ export default {
   },
 
   effects: {
-    * fetch(_, { call, put }) {
-      const [log, notice, feedback, service, list, download, use] = yield ([call(queryLog), call(queryNotice), call(queryFeedback), call(queryService), call(queryList), call(queryDownload), call(queryUse)]);
+    * fetch(_, { all, call, put }) {
+      const [log, notice, feedback, service, list, download, use] = yield all([call(queryLog), call(queryNotice), call(queryFeedback), call(queryService), call(queryList), call(queryDownload), call(queryUse)]);
       if (log.success) {
         yield put({
           type: 'save',

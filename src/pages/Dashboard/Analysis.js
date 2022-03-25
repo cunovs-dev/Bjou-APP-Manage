@@ -41,7 +41,7 @@ class Analysis extends Component {
 
 
   handleRangePickerChange = rangePickerValue => {
-    if(rangePickerValue.length > 0){
+    if (rangePickerValue.length > 0) {
       const { dispatch } = this.props;
 
       this.setState({
@@ -107,8 +107,8 @@ class Analysis extends Component {
     };
     return (
       <GridContent>
-        <Suspense fallback={<PageLoading/>}>
-          <IntroduceRow {...props}/>
+        <Suspense fallback={<PageLoading />}>
+          <IntroduceRow {...props} />
         </Suspense>
         <Suspense fallback={null}>
           <DownLoadCard

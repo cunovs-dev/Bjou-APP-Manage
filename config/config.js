@@ -1,4 +1,4 @@
-  // https://umijs.org/config/
+// https://umijs.org/config/
 import os from 'os';
 import pageRoutes from './router.config';
 import webpackPlugin from './plugin.config';
@@ -28,22 +28,22 @@ const plugins = [
         level: 3,
       },
       pwa: pwa
-        ? {
-            workboxPluginMode: 'InjectManifest',
-            workboxOptions: {
-              importWorkboxFrom: 'local',
-            },
-          }
-        : false,
+           ? {
+          workboxPluginMode: 'InjectManifest',
+          workboxOptions: {
+            importWorkboxFrom: 'local',
+          },
+        }
+           : false,
       ...(!TEST && os.platform() === 'darwin'
-        ? {
-            dll: {
-              include: ['dva', 'dva/router', 'dva/saga', 'dva/fetch'],
-              exclude: ['@babel/runtime', 'netlify-lambda'],
-            },
-            hardSource: false,
-          }
-        : {}),
+          ? {
+          dll: {
+            include: ['dva', 'dva/router', 'dva/saga', 'dva/fetch'],
+            exclude: ['@babel/runtime', 'netlify-lambda'],
+          },
+          hardSource: false,
+        }
+          : {}),
     },
   ],
 ];
@@ -78,13 +78,13 @@ export default {
   theme: {
     'primary-color': primaryColor,
   },
-  // proxy: {
-  //   '/server/api/': {
-  //     target: 'https://preview.pro.ant.design/',
-  //     changeOrigin: true,
-  //     pathRewrite: { '^/server': '' },
-  //   },
-  // },
+  proxy: {
+    '/_api/': {
+      target: 'http://192.168.0.204:9200',
+      changeOrigin: true,
+      pathRewrite: { '^/_api': '' },
+    },
+  },
   ignoreMomentLocale: true,
   lessLoaderOptions: {
     javascriptEnabled: true,

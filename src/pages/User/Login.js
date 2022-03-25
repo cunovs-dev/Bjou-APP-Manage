@@ -8,7 +8,7 @@ import Login from '@/components/Login';
 import styles from './Login.less';
 
 const encrypt = new JSEncrypt();
-encrypt.setPublicKey('MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDeZDX8xTtfIHC2xvWyYjw47zSsKiETbEGhtK1sY3VkeoxRXG4mrZhx+MtnxdlH54HDT+IHlGtMDykMEhMfXrrsGF4+wouVhx91hyhckk5SFUJL6Z35TVeCd3CfJLlh/IQofNx/2cbUF6U4PjquSReYC0HZmboTKggb68OxLNa/3wIDAQAB');
+encrypt.setPublicKey('MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALB+bLq7pd7OBrkd2LfDYw5fOkmjjeY0jq/+eNf1FuHQJtHoJmZIgZWZfNQKAHtWfNQlwag4pvr8P7zdj8u0D3sCAwEAAQ==');
 const { UserName, Password,Submit , CaptchaImg} = Login;
 
 @connect(({ login, loading }) => ({
@@ -125,7 +125,7 @@ class LoginPage extends Component {
               ]}
               onRefreshCaptcha={this.refreshCode}
               getCaptchaImageSrc={login.captchaImageData}
-            /> : ''}
+            /> : null}
           <Submit loading={submitting}>
             <FormattedMessage id="app.login.login" />
           </Submit>

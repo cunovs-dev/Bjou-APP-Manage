@@ -12,7 +12,7 @@ export default {
 
   state: {
     status: undefined,
-    captchaImageData: ''
+    captchaImageData: '',
   },
 
   effects: {
@@ -55,9 +55,11 @@ export default {
           });
         yield put(routerRedux.replace(redirect || '/'));
       } else {
-        yield put({
-          type:'queryVerify'
-        });
+        if (data.captchaImageData) {
+          yield put({
+            type: 'queryVerify',
+          });
+        }
         notification.error({
           message: data.message,
         });
@@ -68,13 +70,13 @@ export default {
       if (data.success) {
         yield put({
           type: 'save',
-          payload:{
-            captchaImageData: data.data
-          }
+          payload: {
+            captchaImageData: data.data,
+          },
         });
       } else {
         notification.error({
-          message: data.message||'图片验证码获取失败',
+          message: data.message || '图片验证码获取失败',
         });
       }
     },
@@ -132,9 +134,9 @@ export default {
     setup({ history, dispatch }) {
       return history.listen(({ pathname }) => {
         if (pathname === '/user/login') {
-          dispatch({
-            type: 'queryVerify',
-          });
+          // dispatch({
+          //   type: 'queryVerify',
+          // });
         }
       });
     },

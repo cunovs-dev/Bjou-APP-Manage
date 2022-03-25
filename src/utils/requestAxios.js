@@ -3,12 +3,20 @@ import qs from 'qs';
 import lodash from 'lodash';
 import pathToRegexp from 'path-to-regexp';
 import { notification } from 'antd';
-import { baseUrl, oauthLoginUrl } from './utils';
 import router from 'umi/router';
+import { oauthLoginUrl, foreUrl } from './utils';
 
-axios.defaults.baseURL = baseUrl;
 axios.defaults.withCredentials = true;
+axios.interceptors.request.use((config) => {
 
+  const foreApi = ['/config/showSS', '/config/setSS', '/config/init'];
+  if (foreApi.includes(config.url)) {
+    config.baseURL = foreUrl;
+    return config;
+  }
+  config.url = `/_api${config.url}`;
+  return config;
+});
 const doDecode = (json) => {
   return eval(`(${json})`);
 };
@@ -18,7 +26,6 @@ const fetch = (options) => {
   const { method = 'get', data, appendParams = {} } = options;
   let { url, hasUrl = false } = options;
   const cloneData = lodash.cloneDeep({ ...data, ...appendParams });
-
   try {
     let domainName = '';
     if (url.match(/[a-zA-z]+:\/\/[^/]*/)) {
@@ -117,6 +124,7 @@ export default function request(options) {
     .then((response) => {
       const { statusText, status } = response;
       let { data } = response;
+
       // eslint-disable-next-line no-unused-expressions
       if (options.fetchType === 'blob') {
         return Promise.resolve({

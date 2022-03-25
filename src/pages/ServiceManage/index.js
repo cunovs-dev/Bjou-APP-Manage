@@ -5,37 +5,26 @@ import {
   Card,
   Table,
   Button,
-  Divider,
   Popconfirm,
-  Pagination,
-  Modal,
   Switch,
-  Alert,
+  message,
 } from 'antd';
-import classNames from 'classnames';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
-import moment from 'moment';
-import AddModal from './components/addModal';
 import FormModal from './components/modal';
 import styles from './index.less';
 
-const namespace = 'lessons';
-const { confirm } = Modal;
+const namespace = 'serviceManage';
+
 
 /* eslint react/no-multi-comp:0 */
-@connect(({ lessons, loading }) => ({
-  lessons,
-  listLoading: loading.effects[`${namespace}/fetch`],
-  adding: loading.effects[`${namespace}/add`],
-  initLoading: loading.effects[`${namespace}/init`],
-  updateLoading: loading.effects[`${namespace}/update`],
-  batchAddLoading: loading.effects[`${namespace}/batchAdd`],
+@connect(({ serviceManage, loading }) => ({
+  serviceManage,
+  initializing: loading.effects[`${namespace}/initialize`],
+  setInfoing: loading.effects[`${namespace}/setInfo`],
 }))
 
-class Lessons extends PureComponent {
-  state = {
-    showWarning: false,
-  };
+
+class ServiceManage extends PureComponent {
 
   columns = [
     {
@@ -43,63 +32,43 @@ class Lessons extends PureComponent {
       dataIndex: 'key',
     },
     {
-      title: 'ID',
-      dataIndex: 'courseId',
-    },
-    {
-      title: '课程名称',
-      dataIndex: 'courseName',
-    },
-    {
-      title: '添加时间',
-      dataIndex: 'createDate',
-      render: val => <span>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</span>,
+      title: '状态',
+      dataIndex: 'state',
     },
     {
       title: '状态',
       dataIndex: 'courseState',
       render: (text, record) => {
+        const { [namespace]: { adding } } = this.props;
+        if (record.key === 4) {
+          return (
+            <FormModal
+              alertInfo={record.alertInfo}
+              param='txt'
+              label='提示信息'
+              title='设置提示信息'
+              loading={adding}
+              onOk={
+                (code, values, callback) => this.handleSetInfoClick(code, values, callback)
+              }
+            >
+              <a href="javascript:;">修改</a>
+            </FormModal>
+          );
+        }
         return (
           <Popconfirm
-            title={`确定${parseInt(text, 10) ? '撤回' : '发布'}要吗?`}
-            onConfirm={() => this.changeState(record)}
+            title={`确定要改变当前状态吗?`}
+            onConfirm={() => this.changeState(record.code)}
             okText="确定"
             cancelText="取消"
           >
             <Switch
-              checkedChildren="撤回"
-              unCheckedChildren="未发布"
-              checked={Boolean(parseInt(text, 10))}
+              checkedChildren="是"
+              unCheckedChildren="否"
+              checked={record.isActive}
             />
           </Popconfirm>
-        );
-      },
-    },
-    {
-      title: '操作',
-      render: (text, record) => {
-        const { adding } = this.props;
-        return (
-          <>
-            <FormModal
-              record={record}
-              loading={adding}
-              onOk={
-                (values, callback) => this.handleUpdateClick(values, callback, record.courseId)
-              }
-            >
-              <a href="javascript:void(0);">修改</a>
-            </FormModal>
-            <Divider type="vertical"/>
-            <Popconfirm
-              title="确定要初始化吗?"
-              onConfirm={() => this.initConfirm(record.courseId)}
-              okText="确定"
-              cancelText="取消"
-            >
-              <a href="javascript:;">初始化</a>
-            </Popconfirm>
-          </>
         );
       },
     },
@@ -108,151 +77,52 @@ class Lessons extends PureComponent {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch({
-      type: `${namespace}/fetch`,
-      payload: {
-        nowPage: 1,
-        pageSize: 10,
-      },
+      type: `${namespace}/getState`,
+    });
+    dispatch({
+      type: `${namespace}/getInfo`,
     });
   }
 
-  handleAddClick = (values, callback) => {
+  initialize = (types, values, callback) => {
+    message.loading('正在初始化...', 0);
     const { dispatch } = this.props;
     dispatch({
-      type: `${namespace}/add`,
-      payload: values,
-      callback,
-    });
-  };
-
-  handleBatchAddClick = (values, callback) => {
-    const { dispatch } = this.props;
-    const { lessons = '', init = true } = values;
-    dispatch({
-      type: `${namespace}/batchAdd`,
+      type: `${namespace}/initialize`,
       payload: {
-        addParam: lessons,
-        init,
+        types,
+        ...values,
       },
       callback,
     });
   };
 
-  handleUpdateClick = (values, callback, id) => {
+  handleSetInfoClick = (code, values, callback) => {
     const { dispatch } = this.props;
     dispatch({
-      type: `${namespace}/update`,
+      type: `${namespace}/setInfo`,
       payload: {
         ...values,
-        courseId: id,
+        code,
       },
       callback,
     });
   };
 
-  initConfirm = (id) => {
+  changeState = (code) => {
     const { dispatch } = this.props;
     dispatch({
-      type: `${namespace}/init`,
+      type: `${namespace}/changeState`,
       payload: {
-        courseId: id,
+        code,
       },
-      callback: this.hideWarning,
-    });
-  };
-
-
-  extraBox = () => {
-    const { showWarning } = this.state;
-    return (
-      <div className={classNames({ [styles.active]: showWarning })}>
-        <Button
-          icon="exclamation-circle"
-          type="primary"
-          onClick={this.showInitConfirm}
-        >
-          初始化
-        </Button>
-      </div>
-    );
-  };
-
-
-  showInitConfirm = () => {
-    confirm({
-      title: '确定要初始化课程信息?',
-      content: <Alert
-        message="警告"
-        type="warning"
-        description='课程初始化需要一定的时间，这段时间内会影响用户访问APP数据，尽量避免频繁操作'
-      />,
-      onOk: () => this.initConfirm(),
-      onCancel() {
-        console.log('Cancel');
-      },
-    });
-  };
-
-
-  changeState = ({ courseId, courseState }) => {
-    const { dispatch } = this.props;
-    dispatch({
-      type: `${namespace}/update`,
-      payload: {
-        courseState: courseState === '0' ? '1' : '0',
-        courseId,
-      },
-      // callback: courseState === '0' ? null : this.showWarning, //提示全部初始化
-    });
-  };
-
-  showWarning = () => {
-    this.setState({
-      showWarning: true,
-    });
-  };
-
-  hideWarning = () => {
-    this.setState({
-      showWarning: false,
-    });
-  };
-
-  pageChangeHandler = page => {
-    const {
-      dispatch,
-      [namespace]: { pagination },
-    } = this.props;
-    dispatch({
-      type: `${namespace}/updatePagination`,
-      payload: {
-        ...pagination,
-        nowPage: page,
-      },
-    });
-    dispatch({
-      type: `${namespace}/fetch`,
-      payload: {
-        nowPage: page,
-        pageSize: pagination.pageSize,
-      },
-    });
-  };
-
-  onShowSizeChange = (current, pageSize) => {
-    const { dispatch, [namespace]: { pagination } } = this.props;
-    dispatch({
-      type: `${namespace}/updatePagination`,
-      payload: {
-        ...pagination,
-        pageSize,
-      },
-    });
-    dispatch({
-      type: `${namespace}/fetch`,
-      payload: {
-        nowPage: current,
-        pageSize,
+      callback: (state) => {
+        dispatch({
+          type: `${namespace}/save`,
+          payload: {
+            [code]: state,
+          },
+        });
       },
     });
   };
@@ -260,64 +130,73 @@ class Lessons extends PureComponent {
 
   render() {
     const {
-      [namespace]: { listData ,pagination},
-      listLoading,
-      adding,
-      updateLoading,
-      initLoading,
-      batchAddLoading,
+      initializing,
+      [namespace]: {
+        l,
+        f,
+        r,
+        alertInfo,
+      },
     } = this.props;
-    const { nowPage, pageSize, totalCount } = pagination;
-    const { showWarning } = this.state;
+    const list = [
+      {
+        key: 1,
+        state: '是否输出通信日志',
+        code: 'l',
+        isActive: l,
+      },
+      {
+        key: 2,
+        state: '同步时，是否清空缓存',
+        code: 'f',
+        isActive: f,
+      },
+      {
+        key: 3,
+        state: 'app是否为审核状态',
+        code: 'r',
+        isActive: r,
+      },
+      {
+        key: 4,
+        state: 'app首页弹窗内容',
+        alertInfo,
+
+      },
+    ];
     return (
-      <PageHeaderWrapper title="课程管理">
+      <PageHeaderWrapper title="数据初始化管理">
         <Card
           bordered={false}
           title={
             <div className={styles.tableListOperator}>
-              <FormModal record={{}} loading={adding} onOk={this.handleAddClick}>
-                <Button icon="plus" type="primary">
-                  添加课程
+              <FormModal title="初始化课程" types='c' loading={initializing} onOk={this.initialize}>
+                <Button type="primary">
+                  初始化课程
                 </Button>
               </FormModal>
-              <AddModal loading={batchAddLoading} onOk={this.handleBatchAddClick}>
-                <Button style={{ marginLeft: '20px' }} icon="plus" type="primary">
-                  批量添加课程
+              <FormModal title="初始化课程考勤" types='a' loading={initializing} onOk={this.initialize}>
+                <Button style={{ marginLeft: '20px' }} type="primary">
+                  初始化课程考勤
                 </Button>
-              </AddModal>
+              </FormModal>
+              <Button style={{ marginLeft: '20px' }} type="primary" onClick={() => this.initialize('u')}>
+                初始化用户
+              </Button>
+              <Button style={{ marginLeft: '20px' }} type="primary" onClick={() => this.initialize('r')}>
+                初始化教师角色
+              </Button>
             </div>
           }
-          extra={this.extraBox()}
+
         >
           <div className={styles.tableList}>
-            {
-              showWarning
-                ?
-                <Alert
-                  message="提示"
-                  type="warning"
-                  description='在完成所有撤回操作后，需点击右上角“初始化”按钮同步更新APP下载页面课程列表。'
-                  showIcon
-                />
-                :
-                null
-            }
             <Table
               bordered={false}
               columns={this.columns}
-              loading={listLoading || updateLoading || initLoading}
-              dataSource={listData}
-              rowKey={record => record.courseId}
+              dataSource={list}
+              rowKey={record => record.key}
               pagination={false}
-            />
-            <Pagination
-              className="ant-table-pagination"
-              total={parseInt(totalCount, 10)}
-              current={parseInt(nowPage, 10)}
-              pageSize={parseInt(pageSize, 10)}
-              onChange={this.pageChangeHandler}
-              showSizeChanger
-              onShowSizeChange={this.onShowSizeChange}
             />
           </div>
         </Card>
@@ -326,4 +205,4 @@ class Lessons extends PureComponent {
   }
 }
 
-export default Lessons;
+export default ServiceManage;

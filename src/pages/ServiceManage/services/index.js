@@ -1,49 +1,49 @@
 import requestaxios from '@/utils/requestAxios';
 
-export async function queryList(params) {
+
+export async function getState(params) {
   return requestaxios({
     method: 'GET',
-    url: '/app/course/findList',
+    url: '/config/showSS',
     data: params,
+    isForeUrl: true,
   });
 }
 
-export async function add(params) {
-  return requestaxios({
-    method: 'POST',
-    url: '/app/course/add',
-    data: params,
-  });
-}
-
-export async function update(params) {
-  return requestaxios({
-    method: 'POST',
-    url: '/app/course/updatestate',
-    data: params,
-  });
-}
-
-export async function init(params) {
+export async function changeState(params) {
   return requestaxios({
     method: 'GET',
-    url: `/app/course/getInitUrl`,
+    url: '/config/setSS',
     data: params,
+    isForeUrl: true,
   });
 }
 
 export async function initialize(params) {
   return requestaxios({
     method: 'GET',
-    url: `${params}`,
-    hasUrl: true,
+    url: '/config/init',
+    data: {
+      code: 'Innovation_2019_bkapp',
+      ...params,
+    },
+    isForeUrl: true,
   });
 }
 
-export async function batchAdd(params) {
+export async function getInfo(params) {
+  return requestaxios({
+    method: 'GET',
+    url: '/log/info/all',
+    data: params,
+  });
+}
+
+export async function setInfo(params) {
+  const { code } = params;
   return requestaxios({
     method: 'POST',
-    url: '/app/course/batchadd',
+    url: `/log/info/set/${code}`,
     data: params,
   });
 }

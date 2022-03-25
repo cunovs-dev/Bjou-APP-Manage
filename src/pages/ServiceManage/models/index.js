@@ -1,106 +1,76 @@
 import { message } from 'antd';
 import * as Service from '../services';
 
-const defaultPagination = {
-  totalCount: 0,
-  nowPage: 1,
-  pageSize: 10,
-};
-const getList = arr => {
-  const result = [];
-  if (!arr) {
-    return undefined;
-  }
-  arr.map((item, i) => {
-    result.push({
-      ...item,
-      key: i + 1,
-    });
-  });
-  return result;
-};
-const namespace = 'lessons';
+const namespace = 'serviceManage';
 export default {
   namespace,
   state: {
-    listData: [],
-    pagination: defaultPagination,
+    l: false,
+    f: false,
+    r: false,
+    alertInfo: {},
   },
 
   effects: {
-    * fetch({ payload }, { call, put }) {
-      const { success, data, msg } = yield call(Service.queryList, payload);
+    * changeState({ payload, callback }, { call }) {
+      const { success, msg } = yield call(Service.changeState, payload);
+      if (success && callback) {
+        callback(/yes/.test(msg));
+      } else {
+        message.error('查询失败');
+      }
+    },
+    * getState({ payload, callback }, { call, put }) {
+      const { success, r, l, f, msg } = yield call(Service.getState, payload);
       if (success) {
         yield put({
           type: 'save',
           payload: {
-            listData: getList(data.data),
-            pagination: {
-              totalCount: data.totalCount,
-              nowPage: data.nowPage,
-              pageSize: data.pageSize,
-            },
+            l,
+            f,
+            r,
           },
         });
       } else {
-        message.error(msg || '查询失败');
+        message.error(msg || '未知错误');
       }
     },
-    * add({ payload, callback }, { call, put, select }) {
-      const { pagination: { nowPage, pageSize } } = yield select(_ => _[`${namespace}`]);
-      const { success, msg } = yield call(Service.add, payload);
+    * initialize({ payload, callback }, { call }) {
+      const { success, message: msg } = yield call(Service.initialize, payload);
+
       if (success) {
-        message.success('添加成功');
+        message.destroy();
+        message.success('初始化成功', 2.5);
         if (callback) callback();
-        yield put({ type: 'fetch', payload: { nowPage, pageSize } });
       } else {
-        message.error(msg || '添加失败');
+        message.destroy();
+        message.error(msg || '未知错误');
       }
     },
-    * batchAdd({ payload, callback }, { call, put, select }) {
-      const { pagination: { nowPage, pageSize } } = yield select(_ => _[`${namespace}`]);
-      const { success, msg } = yield call(Service.batchAdd, payload);
+    * getInfo({ payload }, { call, put }) {
+      const { success, data, msg } = yield call(Service.getInfo, payload);
       if (success) {
-        message.success('批量添加成功');
+        yield put({
+          type: 'save',
+          payload: {
+            alertInfo: data,
+          },
+        });
+      } else {
+        message.error(msg || '未知错误');
+      }
+    },
+    * setInfo({ payload, callback }, { call, put }) {
+      const { success, data, msg } = yield call(Service.setInfo, payload);
+      if (success) {
         if (callback) callback();
-        yield put({ type: 'fetch', payload: { nowPage, pageSize } });
+        yield put({
+          type: 'getInfo',
+        });
+        message.success(data);
       } else {
-        message.error(msg || '批量添加失败');
+        message.error(msg || '未知错误');
       }
-    },
-    * update({ payload, callback }, { call, put, select }) {
-      const { pagination: { nowPage, pageSize } } = yield select(_ => _[`${namespace}`]);
-      const { courseState } = payload;
-      const { success, msg } = yield call(Service.update, payload);
-      if (success) {
-        yield put({ type: 'fetch', payload: { nowPage, pageSize } });
-
-        if (courseState === '1') {
-          message.success('发布成功');
-        } else {
-          message.success('撤回成功');
-          if (callback) callback();
-        }
-
-      } else {
-        message.error(msg || '修改失败');
-      }
-    },
-    * init({ payload, callback }, { call, put, select }) {
-      const { pagination: { nowPage, pageSize } } = yield select(_ => _[`${namespace}`]);
-      const { success, msg, data } = yield call(Service.init, payload);
-      if (success) {
-
-        yield put({ type: 'fetch' , payload: { nowPage, pageSize } });
-        message.success('已开始初始化,请耐心等待...', 3);
-        //yield put({ type: 'initialize', payload: data });
-      } else {
-        message.error(msg || '初始化失败');
-      }
-      if (callback) callback();
-    },
-    * initialize({ payload }, { call }) {
-      yield call(Service.initialize, payload);
     },
   },
 

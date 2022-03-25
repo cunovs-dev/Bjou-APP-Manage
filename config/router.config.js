@@ -104,6 +104,15 @@ export default [
           },
         ],
       },
+      {
+        path: '/serviceManage',
+        routes: [
+          {
+            path: '/serviceManage/basic',
+            component: './ServiceManage',
+          },
+        ],
+      },
       // 个人设置
       {
         path: '/settings',
